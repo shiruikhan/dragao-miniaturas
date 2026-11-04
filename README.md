@@ -32,6 +32,12 @@ A aba **Inventário** traz indicações de STL gratuitos para cada mini (Thingiv
 
 Os arquivos ficam **fora do git** (ver `.gitignore`), na pasta `stl/` do projeto, com uma subpasta por mini usando o mesmo identificador do `js/data.js` (ex.: `stl/ankheg/`, `stl/carnical/`); NPCs únicos ficam em `stl/npcs/` e companheiros em `stl/companheiros/`. A aba Inventário mostra a pasta de cada mini.
 
+### Ver os STLs em 3D
+
+Na aba **Inventário**, o botão **Conectar pasta stl/** pede acesso à pasta `stl` do projeto (Chrome ou Edge). A página lista os arquivos de cada mini, marca os baixados automaticamente e o botão **3D** abre o modelo com medidas em mm. Tudo roda no navegador: os arquivos não são enviados para lugar nenhum, então funciona igual no GitHub Pages. Em outros navegadores, o botão 3D permite abrir arquivos `.stl` avulsos.
+
+O visualizador usa [three.js](https://threejs.org) r128 (licença MIT), incluído em `js/vendor/`.
+
 ## Publicar no GitHub Pages
 
 Settings → Pages → *Deploy from a branch* → branch `main`, pasta `/ (root)`.

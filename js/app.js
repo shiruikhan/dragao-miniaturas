@@ -393,6 +393,35 @@
   const NPCS_UNICOS = ["falcon", "donjon", "adabra", "alfonso", "pell", "toblen", "dobin", "tibor", "corwin", "harbin", "elmar", "linene", "halia"];
   const pastaStl = (m) => (mini(m).tipo === "companheiro" ? `companheiros/${m}` : NPCS_UNICOS.includes(m) ? `npcs/${m}` : m);
 
+  // ---------- Pasta stl/ local ----------
+  let stlContagem = {};
+  let pastaStatus = "";
+
+  async function escanearPasta() {
+    const ids = Object.keys(MINIS).concat(Object.keys(S.customMinis));
+    const caminhos = ids.map(pastaStl);
+    const r = await Visualizador.escanear(caminhos);
+    stlContagem = {};
+    ids.forEach((m, i) => {
+      stlContagem[m] = r[caminhos[i]] || 0;
+      if (stlContagem[m]) S.stlOk[m] = true;
+    });
+    pastaStatus = `Pasta <b>${esc(Visualizador.nome())}</b> conectada · ${Object.values(stlContagem).filter(Boolean).length} minis com STL`;
+    render();
+  }
+
+  async function iniciarPasta(pedir) {
+    if (typeof Visualizador === "undefined" || !Visualizador.suportaPasta) {
+      pastaStatus = "Este navegador não permite ler pastas (use Chrome ou Edge). Você ainda pode abrir arquivos .stl avulsos no botão 3D.";
+      return;
+    }
+    try {
+      const r = await Visualizador.restaurar(pedir);
+      if (typeof r === "string") await escanearPasta();
+      else if (r && r.pendente) { pastaStatus = `Pasta <b>${esc(r.pendente)}</b> lembrada — clique em "Conectar pasta stl/" para liberar o acesso.`; render(); }
+    } catch (e) { /* sem acesso */ }
+  }
+
   function renderInventario() {
     const maxTot = maximoCampanha(false);
     const maxPend = maximoCampanha(true);
@@ -401,11 +430,15 @@
     ids.forEach((m) => { (porTipo[mini(m).tipo] = porTipo[mini(m).tipo] || []).push(m); });
     $("#painel-inventario").innerHTML = `
       <p class="intro"><b>Pico</b> = maior quantidade exigida ao mesmo tempo em um único local. É o máximo que você precisa ter impresso, mesmo que a criatura apareça em vários locais.</p>
+      <div class="pasta-bar">
+        <button id="conectar-stl" class="secundario">${typeof Visualizador !== "undefined" && Visualizador.conectado() ? "Reescanear pasta stl/" : "Conectar pasta stl/"}</button>
+        <span class="muted">${pastaStatus || "Escolha a pasta <code>stl</code> do projeto para ver os modelos em 3D e marcar os baixados automaticamente. Os arquivos não saem do seu computador."}</span>
+      </div>
       <p class="intro"><b>STL</b>: indicações gratuitas (Thingiverse/Printables), com preferência pelos modelos do sergeantr feitos a partir das minis do Essentials Kit e pelos do MZ4250. Confira a licença na página antes de baixar. Salve na pasta <code>stl/&lt;nome-da-mini&gt;</code> do projeto (fica fora do git).</p>
       ${Object.keys(TIPOS).filter((t) => porTipo[t]).map((t) => `
         <h3>${TIPOS[t]}</h3>
         <div class="tabela-wrap"><table>
-          <thead><tr><th>Miniatura</th><th>Tamanho</th><th>Onde aparece</th><th class="n">Pico (campanha)</th><th class="n">Pico (pendentes)</th><th class="n">Impressas</th><th class="n">Faltam</th><th>STL (gratuito)</th><th class="n" title="Marque quando o STL já estiver baixado na sua pasta">Baixado</th></tr></thead>
+          <thead><tr><th>Miniatura</th><th>Tamanho</th><th>Onde aparece</th><th class="n">Pico (campanha)</th><th class="n">Pico (pendentes)</th><th class="n">Impressas</th><th class="n">Faltam</th><th>STL (gratuito)</th><th class="n">Ver</th><th class="n" title="Marque quando o STL já estiver baixado na sua pasta">Baixado</th></tr></thead>
           <tbody>${porTipo[t].map((m) => {
             const tem = S.impressas[m] || 0;
             const falta = Math.max(0, (maxPend[m] || 0) - tem);
@@ -415,6 +448,7 @@
               <td class="n"><input type="number" min="0" class="inv" data-mini="${m}" value="${tem}"></td>
               <td class="n">${falta ? `<b>${falta}</b>` : "✓"}</td>
               <td class="stl">${linksStl(m)}</td>
+              <td class="n"><button class="ver3d" data-ver="${m}" title="Ver o STL em 3D">3D${stlContagem[m] ? ` <span class="qtd">${stlContagem[m]}</span>` : ""}</button></td>
               <td class="n"><input type="checkbox" class="stl-ok" data-mini="${m}" ${S.stlOk[m] ? "checked" : ""} aria-label="STL de ${esc(mini(m).nome)} baixado"></td></tr>`;
           }).join("")}</tbody></table></div>`).join("")}`;
   }
@@ -533,6 +567,21 @@
         S.customEnc.forEach((x) => (x.grupos = x.grupos.filter((g) => g.m !== t.dataset.delMini)));
         S.customEnc = S.customEnc.filter((x) => x.grupos.length);
         render();
+      } else if (t.dataset.ver) {
+        Visualizador.abrir(mini(t.dataset.ver).nome, pastaStl(t.dataset.ver));
+      } else if (t.id === "conectar-stl") {
+        (async () => {
+          try {
+            if (Visualizador.conectado()) await escanearPasta();
+            else {
+              const r = await Visualizador.restaurar(true);
+              if (typeof r !== "string") await Visualizador.conectar();
+              await escanearPasta();
+            }
+          } catch (err) {
+            if (err && err.name !== "AbortError") alertar(err.message || "Não foi possível abrir a pasta.");
+          }
+        })();
       } else if (t.id === "exportar") {
         const blob = new Blob([JSON.stringify(S, null, 2)], { type: "application/json" });
         const a = document.createElement("a");
@@ -577,4 +626,5 @@
 
   bind();
   render();
+  iniciarPasta(false);
 })();
