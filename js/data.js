@@ -263,3 +263,57 @@ const LOCAIS = [
     ],
   },
 ];
+
+/*
+ * STLs gratuitos (Thingiverse "t:ID", Printables "p:ID"), levantados em nov/2026.
+ * Preferência: sergeantr (modelos feitos a partir das minis do Essentials Kit) e MZ4250
+ * (distribuídos de graça sob a Fan Content Policy da Wizards). Confira a licença na página antes de usar.
+ * en = nome em inglês, usado no link de busca quando não há indicação.
+ */
+const STL = {
+  anacoreta:    { en: "anchorite of talos", f: [["t:3719295", "Anchorite — sergeantr (Essentials Kit)"], ["t:4226514", "Flenz e Narux — sergeantr"], ["t:4216132", "Yargath — sergeantr"]] },
+  ankheg:       { en: "ankheg", f: [["t:4203575", "sergeantr (Essentials Kit)"], ["t:4232956", "MZ4250"]] },
+  aranha:       { en: "giant spider", f: [["t:3487091", "Velrock"]] },
+  banshee:      { en: "banshee", f: [["t:3726641", "sergeantr (Essentials Kit)"], ["t:1248204", "MZ4250"]] },
+  caranguejo:   { en: "giant crab", f: [["t:6284252", "jimjimjimmyjim"]] },
+  carnical:     { en: "ghoul", f: [["t:2839914", "Ghoul and Ghast — MZ4250"]] },
+  cavalo:       { en: "riding horse", f: [["t:4987622", "Kromlekthemad (com alforjes)"]] },
+  cavalo_esq:   { en: "skeleton warhorse", f: [["t:6437850", "dfreas"]] },
+  centauro:     { en: "centaur", f: [["t:3776909", "sergeantr (Essentials Kit)"], ["t:1235902", "MZ4250"]] },
+  cryovain:     { en: "young white dragon", f: [["t:2830485", "White Dragon — MZ4250"]] },
+  espreitador:  { en: "invisible stalker", f: [["t:4826761", "MZ4250"]] },
+  fogo_fatuo:   { en: "will-o-wisp", f: [["t:2847670", "MZ4250"]] },
+  gnomo:        { en: "rock gnome", f: [["t:4222357", "Rock Gnome Recluse — sergeantr"], ["t:4237912", "Gnome Maiden — sergeantr"], ["t:4226498", "Rei Gnerkli — sergeantr"], ["t:4224476", "Rei Korboz — sergeantr"]] },
+  gorthok:      { en: "thunder boar", f: [["t:3837252", "sergeantr (Essentials Kit)"]] },
+  gosma:        { en: "ochre jelly", f: [["t:2843596", "Ooze Collection — MZ4250"]] },
+  harpia:       { en: "harpy", f: [["t:3792888", "sergeantr (Essentials Kit)"], ["t:2841671", "MZ4250"]] },
+  homem_rato:   { en: "wererat", f: [["p:15944", "Lycanthropes — MZ4250"]] },
+  javali:       { en: "boar", f: [["t:6150875", "ArmouredUpMinis"]] },
+  manticora:    { en: "manticore", f: [["t:1238489", "MZ4250"]] },
+  mimico:       { en: "barrel mimic", f: [["t:2843119", "Mimic Collection — MZ4250"]] },
+  ogro:         { en: "ogre", f: [["t:3858364", "sergeantr (Essentials Kit)"], ["t:4203584", "Ogres — sergeantr"]] },
+  orc:          { en: "orc warrior", f: [["t:3088672", "MZ4250"]] },
+  ramo_espetos: { en: "needle blight", f: [["t:3728500", "sergeantr (Essentials Kit)"]] },
+  ramo_galhos:  { en: "twig blight", f: [["t:3728580", "sergeantr (Essentials Kit)"], ["t:3780707", "schlossbauer"]] },
+  ramo_vinhas:  { en: "vine blight", f: [["t:4918651", "schlossbauer"]] },
+  rato:         { en: "giant rat", f: [["t:3484749", "Velrock"]] },
+  stirge:       { en: "stirge", f: [["t:2847438", "MZ4250"]] },
+  tubarao:      { en: "hunter shark", f: [] },
+  vaca:         { en: "cow", f: [["t:2930167", "MZ4250"]] },
+  verme:        { en: "carrion crawler", f: [["t:3731718", "sergeantr (Essentials Kit)"]] },
+  veterano:     { en: "veteran fighter", f: [["t:4237944", "The Stone Cold Reavers (Sicários Frios) — sergeantr"]] },
+  anao:         { en: "dwarf miner", f: [["t:4203607", "Dazlyn e Norbus — sergeantr"], ["t:3006182", "Epic Dwarf — Valandar"]] },
+  falcon:       { en: "ranger hunter", f: [["t:3787041", "sergeantr (Essentials Kit)"]] },
+  donjon:       { en: "Don-Jon Raskin", f: [["t:3782125", "sergeantr (Essentials Kit)"]] },
+  adabra:       { en: "midwife commoner", f: [["t:4203567", "sergeantr (Essentials Kit)"]] },
+  alfonso:      { en: "retired sheriff", f: [["t:4203594", "Big Al e Pell — sergeantr"]] },
+  pell:         { en: "stable boy", f: [["t:4203594", "Big Al e Pell — sergeantr"]] },
+  toblen:       { en: "innkeeper", f: [["t:3777965", "Barkeep — sergeantr"]] },
+  dobin:        { en: "veteran fighter", f: [["t:4237944", "Stone Cold Reavers — sergeantr"]] },
+  tibor:        { en: "commoner", f: [["t:2812198", "Commoner Collection — MZ4250"]] },
+  corwin:       { en: "cook commoner", f: [["t:2812198", "Commoner Collection — MZ4250"]] },
+  harbin:       { en: "commoner", f: [["t:2812198", "Commoner Collection — MZ4250"]] },
+  elmar:        { en: "merchant", f: [["t:2812198", "Commoner Collection — MZ4250"]] },
+  linene:       { en: "merchant", f: [["t:2812198", "Commoner Collection — MZ4250"]] },
+  halia:        { en: "noble", f: [["t:2812198", "Commoner Collection — MZ4250"]] },
+};

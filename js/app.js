@@ -33,6 +33,7 @@
     modo: "local",
     tipos: { monstro: true, animal: true, npc: true, companheiro: true, custom: true },
     impressas: {},
+    stlOk: {},
     status: {},
     ordem: LOCAIS.map((l) => l.id),
     enc: {},
@@ -375,6 +376,23 @@
       <button onclick="window.print()" class="secundario">Imprimir esta lista</button>`;
   }
 
+  // Links de STL: indicações do data.js + busca no Thingiverse como reserva
+  function urlStl(ref) {
+    const [site, id] = ref.split(":");
+    return site === "p" ? `https://www.printables.com/model/${id}` : `https://www.thingiverse.com/thing:${id}`;
+  }
+  function linksStl(m) {
+    const info = (typeof STL !== "undefined" && STL[m]) || {};
+    const fontes = (info.f || []).map(([ref, nome]) =>
+      `<a href="${urlStl(ref)}" target="_blank" rel="noopener">${esc(nome)}</a>`);
+    const termo = info.en || mini(m).nome;
+    fontes.push(`<a class="busca" href="https://www.thingiverse.com/search?q=${encodeURIComponent(termo + " miniature")}&type=things" target="_blank" rel="noopener">buscar</a>`);
+    return fontes.join(" · ");
+  }
+
+  const NPCS_UNICOS = ["falcon", "donjon", "adabra", "alfonso", "pell", "toblen", "dobin", "tibor", "corwin", "harbin", "elmar", "linene", "halia"];
+  const pastaStl = (m) => (mini(m).tipo === "companheiro" ? `companheiros/${m}` : NPCS_UNICOS.includes(m) ? `npcs/${m}` : m);
+
   function renderInventario() {
     const maxTot = maximoCampanha(false);
     const maxPend = maximoCampanha(true);
@@ -383,18 +401,21 @@
     ids.forEach((m) => { (porTipo[mini(m).tipo] = porTipo[mini(m).tipo] || []).push(m); });
     $("#painel-inventario").innerHTML = `
       <p class="intro"><b>Pico</b> = maior quantidade exigida ao mesmo tempo em um único local. É o máximo que você precisa ter impresso, mesmo que a criatura apareça em vários locais.</p>
+      <p class="intro"><b>STL</b>: indicações gratuitas (Thingiverse/Printables), com preferência pelos modelos do sergeantr feitos a partir das minis do Essentials Kit e pelos do MZ4250. Confira a licença na página antes de baixar. Salve na pasta <code>stl/&lt;nome-da-mini&gt;</code> do projeto (fica fora do git).</p>
       ${Object.keys(TIPOS).filter((t) => porTipo[t]).map((t) => `
         <h3>${TIPOS[t]}</h3>
         <div class="tabela-wrap"><table>
-          <thead><tr><th>Miniatura</th><th>Tamanho</th><th>Onde aparece</th><th class="n">Pico (campanha)</th><th class="n">Pico (pendentes)</th><th class="n">Impressas</th><th class="n">Faltam</th></tr></thead>
+          <thead><tr><th>Miniatura</th><th>Tamanho</th><th>Onde aparece</th><th class="n">Pico (campanha)</th><th class="n">Pico (pendentes)</th><th class="n">Impressas</th><th class="n">Faltam</th><th>STL (gratuito)</th><th class="n" title="Marque quando o STL já estiver baixado na sua pasta">Baixado</th></tr></thead>
           <tbody>${porTipo[t].map((m) => {
             const tem = S.impressas[m] || 0;
             const falta = Math.max(0, (maxPend[m] || 0) - tem);
             const onde = LOCAIS.filter((l) => necessidadeLocal(l)[m]).map((l) => `${l.nome} (${necessidadeLocal(l)[m]})`).join(", ");
-            return `<tr class="${falta ? "falta" : "ok-row"}"><td>${esc(mini(m).nome)}${mini(m).obs ? `<div class="enc-nota">${esc(mini(m).obs)}</div>` : ""}</td><td>${tamBadge(mini(m).tam)}</td>
+            return `<tr class="${falta ? "falta" : "ok-row"}"><td>${esc(mini(m).nome)}<div class="pasta"><code>stl/${pastaStl(m)}</code></div>${mini(m).obs ? `<div class="enc-nota">${esc(mini(m).obs)}</div>` : ""}</td><td>${tamBadge(mini(m).tam)}</td>
               <td class="onde">${esc(onde) || "—"}</td><td class="n">${maxTot[m] || 0}</td><td class="n">${maxPend[m] || 0}</td>
               <td class="n"><input type="number" min="0" class="inv" data-mini="${m}" value="${tem}"></td>
-              <td class="n">${falta ? `<b>${falta}</b>` : "✓"}</td></tr>`;
+              <td class="n">${falta ? `<b>${falta}</b>` : "✓"}</td>
+              <td class="stl">${linksStl(m)}</td>
+              <td class="n"><input type="checkbox" class="stl-ok" data-mini="${m}" ${S.stlOk[m] ? "checked" : ""} aria-label="STL de ${esc(mini(m).nome)} baixado"></td></tr>`;
           }).join("")}</tbody></table></div>`).join("")}`;
   }
 
@@ -475,6 +496,9 @@
 
     document.body.addEventListener("change", (e) => {
       const t = e.target;
+      if (t.classList.contains("stl-ok")) {
+        S.stlOk[t.dataset.mini] = t.checked; salvar(); return;
+      }
       if (t.classList.contains("inv")) {
         S.impressas[t.dataset.mini] = Math.max(0, +t.value || 0);
         render();

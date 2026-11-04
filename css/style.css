@@ -156,3 +156,9 @@ button.link { background: none; color: var(--warn); padding: 0 0 0 24px; font-si
 .aviso-txt { color: var(--warn); }
 table.balanco td { font-size: 13px; }
 tr.off td { opacity: .45; }
+
+td.stl { font-size: 12px; min-width: 200px; }
+td.stl a { color: var(--accent); }
+td.stl a.busca { color: var(--muted); }
+code { font-size: 12px; background: var(--frost); padding: 1px 5px; border-radius: 4px; }
+.pasta { margin-top: 2px; }

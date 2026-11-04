@@ -1,0 +1,13 @@
+# Arquivos de impressão ficam só no computador (são pesados)
+stl/
+*.stl
+*.3mf
+*.obj
+*.lys
+*.chitubox
+*.ctb
+*.goo
+*.gcode
+*.zip
+*.rar
+*.7z
