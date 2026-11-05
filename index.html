@@ -5,36 +5,59 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Miniaturas — Dragão da Espiral de Gelo</title>
   <meta name="description" content="Controle de impressão 3D das miniaturas da aventura O Dragão da Espiral de Gelo, agrupadas por local e ajustadas ao número de jogadores.">
+  <meta name="theme-color" content="#0F2A33">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9D%84%3C/text%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:ital,wght@0,400;0,500;0,700;0,800;1,400&family=Grenze:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <header class="topo">
     <div class="wrap">
-      <p class="sobre">D&amp;D 5e · O Dragão da Espiral de Gelo</p>
-      <h1>Controle de Miniaturas</h1>
-      <p class="sub">Quantas minis imprimir para cada local, ajustado à sua mesa — sem imprimir peças repetidas.</p>
+      <div class="marca">
+        <h1>Controle de Miniaturas</h1>
+        <p class="sub">Quantas minis imprimir para cada local de <cite>O Dragão da Espiral de Gelo</cite> (D&amp;D 5e), ajustado à sua mesa e sem imprimir peça repetida.</p>
+      </div>
+
+      <section class="controles" aria-label="Configuração da mesa">
+        <div class="campo">
+          <label for="jog">Jogadores</label>
+          <div class="contador">
+            <button type="button" data-passo="-1" data-alvo="jog" aria-label="Um jogador a menos">−</button>
+            <input id="jog" type="number" min="1" max="12" inputmode="numeric">
+            <button type="button" data-passo="1" data-alvo="jog" aria-label="Um jogador a mais">+</button>
+          </div>
+        </div>
+        <div class="campo">
+          <label for="comp">Companheiros</label>
+          <div class="contador">
+            <button type="button" data-passo="-1" data-alvo="comp" aria-label="Um companheiro a menos">−</button>
+            <input id="comp" type="number" min="0" max="12" inputmode="numeric">
+            <button type="button" data-passo="1" data-alvo="comp" aria-label="Um companheiro a mais">+</button>
+          </div>
+        </div>
+        <div class="campo">
+          <label for="regras">Ajuste de dificuldade</label>
+          <select id="regras"><option value="55">5.5e — mesa grande</option><option value="55f">5.5e — reforçado</option><option value="5e">Livro 5e (sem ajuste)</option></select>
+        </div>
+        <fieldset class="campo modo">
+          <legend>Contagem no local</legend>
+          <div class="segmentado">
+            <label><input type="radio" name="modo" value="local"><span>Local inteiro</span></label>
+            <label><input type="radio" name="modo" value="encontro"><span>Maior encontro</span></label>
+          </div>
+        </fieldset>
+        <fieldset class="campo tipos">
+          <legend>Mostrar</legend>
+          <div id="tipos"></div>
+        </fieldset>
+      </section>
     </div>
   </header>
 
   <main class="wrap">
-    <section class="controles" aria-label="Configuração da mesa">
-      <label class="campo">Jogadores <input id="jog" type="number" min="1" max="12"></label>
-      <label class="campo">Companheiros <input id="comp" type="number" min="0" max="12"></label>
-      <label class="campo">Ajuste de dificuldade
-        <select id="regras"><option value="55">5.5e — mesa grande</option><option value="55f">5.5e — reforçado</option><option value="5e">Livro 5e (sem ajuste)</option></select></label>
-      <fieldset class="campo modo">
-        <legend>Contagem no local</legend>
-        <label><input type="radio" name="modo" value="local"> Local inteiro</label>
-        <label><input type="radio" name="modo" value="encontro"> Maior encontro</label>
-      </fieldset>
-      <div class="campo tipos"><span class="legend">Mostrar</span><div id="tipos"></div></div>
-    </section>
-
-    <section id="resumo" class="resumo" aria-live="polite"></section>
+    <section id="resumo" class="resumo estreia" aria-live="polite" aria-label="Próxima impressão"></section>
 
     <nav class="abas" aria-label="Seções">
       <button data-aba="locais">Por local</button>
@@ -49,11 +72,13 @@
     <div id="painel-inventario" class="painel" hidden></div>
     <div id="painel-dados" class="painel" hidden></div>
     <div id="painel-balanco" class="painel" hidden></div>
-    <p id="aviso" class="aviso" hidden></p>
+    <p id="aviso" class="aviso" role="alert" hidden></p>
   </main>
 
-  <footer class="rodape wrap">
-    <p>Quantidades tiradas do livro de aventura (Essentials Kit). Ferramenta de fã, sem afiliação com a Wizards of the Coast. Seus dados ficam só neste navegador.</p>
+  <footer class="rodape">
+    <div class="wrap">
+      <p>Quantidades tiradas do livro de aventura (Essentials Kit). Ferramenta de fã, sem afiliação com a Wizards of the Coast. Seus dados ficam só neste navegador.</p>
+    </div>
   </footer>
 
   <script src="js/vendor/three.min.js"></script>

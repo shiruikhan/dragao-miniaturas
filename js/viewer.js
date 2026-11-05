@@ -122,7 +122,7 @@
     const tam = new THREE.Vector3();
     geo.boundingBox.getSize(tam);
     if (malha) { cena.remove(malha); malha.geometry.dispose(); }
-    const cor = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#2f6f9f";
+    const cor = getComputedStyle(document.documentElement).getPropertyValue("--resina").trim() || "#8d9aa0";
     malha = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: cor, roughness: 0.6, metalness: 0.05 }));
     cena.add(malha);
     const r = Math.max(tam.x, tam.y, tam.z) || 1;
@@ -160,7 +160,7 @@
       try {
         const buf = await arquivo.arrayBuffer();
         const t = mostrarGeometria(buf);
-        medidas.textContent = `${t.x.toFixed(1)} × ${t.z.toFixed(1)} × ${t.y.toFixed(1)} mm (L × P × A) · arraste para girar, role para zoom`;
+        medidas.textContent = `${t.x.toFixed(1)} × ${t.z.toFixed(1)} × ${t.y.toFixed(1)} mm (L × P × A). Arraste para girar e role para dar zoom.`;
       } catch (e) {
         medidas.textContent = "Não foi possível ler este arquivo.";
       }

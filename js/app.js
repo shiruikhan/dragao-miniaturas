@@ -207,7 +207,9 @@
   // ---------- Utilitários de DOM ----------
   const $ = (sel, el = document) => el.querySelector(sel);
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-  const tamBadge = (t) => `<span class="tam tam-${t}" title="${TAMANHOS[t]?.nome || t} — base ${TAMANHOS[t]?.base || "?"}">${TAMANHOS[t]?.nome || t}</span>`;
+  const tamBadge = (t) => `<span class="tam tam-${t}" title="${TAMANHOS[t]?.nome || t}, base de ${TAMANHOS[t]?.base || "?"}"><i aria-hidden="true"></i>${TAMANHOS[t]?.nome || t}</span>`;
+  const plural = (n, um, varios) => `${n} ${n === 1 ? um : varios}`;
+  const okMarca = `<span class="check" title="Completo">✓</span>`;
   const statusLabel = { pendente: "Pendente", atual: "Em andamento", concluido: "Concluído" };
 
   // ---------- Renderização ----------
@@ -215,7 +217,10 @@
     renderControles();
     renderResumo();
     const aba = S.aba || "locais";
-    document.querySelectorAll(".abas button").forEach((b) => b.classList.toggle("ativo", b.dataset.aba === aba));
+    document.querySelectorAll(".abas button").forEach((b) => {
+      b.classList.toggle("ativo", b.dataset.aba === aba);
+      if (b.dataset.aba === aba) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
+    });
     document.querySelectorAll(".painel").forEach((p) => (p.hidden = p.id !== "painel-" + aba));
     if (aba === "locais") renderLocais();
     if (aba === "plano") renderPlano();
@@ -231,30 +236,60 @@
     $("#regras").value = S.regras;
 
     document.querySelectorAll("input[name=modo]").forEach((r) => (r.checked = r.value === S.modo));
+    // Monta os filtros uma vez e depois só atualiza, para não perder o foco do teclado
     const box = $("#tipos");
-    box.innerHTML = Object.keys(TIPOS).map((t) =>
-      `<label class="chip"><input type="checkbox" data-tipo="${t}" ${S.tipos[t] !== false ? "checked" : ""}> ${TIPOS[t]}</label>`
-    ).join("");
+    if (!box.children.length) {
+      box.innerHTML = Object.keys(TIPOS).map((t) =>
+        `<label class="chip"><input type="checkbox" data-tipo="${t}"><span>${TIPOS[t]}</span></label>`
+      ).join("");
+    }
+    box.querySelectorAll("input[data-tipo]").forEach((c) => (c.checked = S.tipos[c.dataset.tipo] !== false));
   }
 
   function renderResumo() {
     const etapas = plano();
     const prox = etapas.find((e) => e.st === "atual") || etapas.find((e) => e.st === "pendente");
     const maxPend = maximoCampanha(true);
-    let faltaTotal = 0;
-    for (const m in maxPend) faltaTotal += Math.max(0, maxPend[m] - (S.impressas[m] || 0));
+    let faltaTotal = 0, precisaTotal = 0;
+    for (const m in maxPend) {
+      precisaTotal += maxPend[m];
+      faltaTotal += Math.max(0, maxPend[m] - (S.impressas[m] || 0));
+    }
     const impressasTotal = somaValores(S.impressas);
-    let proxHtml = "<p class='muted'>Todos os locais concluídos.</p>";
-    if (prox) {
+    const temAgora = precisaTotal - faltaTotal;
+    const pct = precisaTotal ? Math.round((temAgora / precisaTotal) * 100) : 100;
+
+    let proxHtml, mesaHtml;
+    if (!prox) {
+      proxHtml = `<p class="prox-rotulo">Campanha</p><h2 class="prox-nome">Todos os locais concluídos</h2>`;
+      mesaHtml = `<div class="mesa vazia"><p>Nada na fila de impressão.</p></div>`;
+    } else {
       const itens = ordenarMinis(Object.keys(prox.imprimir));
-      proxHtml = `<p class="kicker">Próximo local: <strong>${esc(prox.loc.nome)}</strong></p>` + (itens.length
-        ? `<ul class="lista-curta">${itens.map((m) => `<li><b>${prox.imprimir[m]}×</b> ${esc(mini(m).nome)} ${tamBadge(mini(m).tam)}</li>`).join("")}</ul>`
-        : `<p class="ok">Nada a imprimir — você já tem tudo para este local.</p>`);
+      const n = somaValores(prox.imprimir);
+      proxHtml = `<p class="prox-rotulo">${prox.st === "atual" ? "Em andamento" : "Próximo local"}</p>
+        <h2 class="prox-nome">${esc(prox.loc.nome)}</h2>
+        <p class="prox-frase">${n
+          ? `Imprima <b>${plural(n, "mini", "minis")}</b> antes de jogar este local.`
+          : "Nada a imprimir: as minis que você já tem bastam para este local."}</p>`;
+      // Mesa de impressão: uma base por mini, em escala (25, 50 ou 75 mm)
+      const LIMITE = 24;
+      let ordem = 0;
+      mesaHtml = itens.length
+        ? `<ul class="mesa" aria-label="Bases a imprimir, em escala">${itens.map((m) => {
+            const q = prox.imprimir[m], t = mini(m).tam;
+            const bases = Array.from({ length: Math.min(q, LIMITE) }, () => `<i class="base base-${t}" style="--i:${Math.min(ordem++, 20)}"></i>`).join("")
+              + (q > LIMITE ? `<i class="base mais">+${q - LIMITE}</i>` : "");
+            return `<li class="grupo" title="${esc(mini(m).nome)}, base de ${TAMANHOS[t]?.base || "?"}"><span class="bases" aria-hidden="true">${bases}</span><span class="legenda"><b>${q}×</b> ${esc(mini(m).nome)}</span></li>`;
+          }).join("")}</ul>`
+        : `<div class="mesa vazia"><p>Mesa vazia: as minis da caixa bastam.</p></div>`;
     }
     $("#resumo").innerHTML = `
-      <div class="stat"><span class="num">${faltaTotal}</span><span class="lbl">minis faltando para o resto da campanha</span></div>
-      <div class="stat"><span class="num">${impressasTotal}</span><span class="lbl">minis já impressas</span></div>
-      <div class="prox">${proxHtml}</div>`;
+      <div class="prox">${proxHtml}</div>
+      <figure class="mesa-fig">${mesaHtml}<figcaption>Cada círculo é uma base, em escala: 25 mm, 50 mm (Grande) e 75 mm (Enorme).</figcaption></figure>
+      <div class="campanha">
+        <p>Faltam <b>${plural(faltaTotal, "mini", "minis")}</b> para o resto da campanha. Você já imprimiu <b>${impressasTotal}</b>.</p>
+        <div class="barra" role="progressbar" aria-label="Minis da campanha já impressas" aria-valuemin="0" aria-valuemax="${precisaTotal}" aria-valuenow="${temAgora}"><span style="width:${pct}%"></span></div>
+      </div>`;
   }
 
   function linhaNecessidade(m, n, imprimir) {
@@ -265,8 +300,8 @@
       <td>${tamBadge(mini(m).tam)}</td>
       <td class="n">${n}</td>
       <td class="n"><input type="number" min="0" class="inv" data-mini="${m}" value="${tem}" aria-label="Impressas de ${esc(mini(m).nome)}"></td>
-      <td class="n">${falta ? `<b>${falta}</b>` : "✓"}</td>
-      <td class="n">${imprimir ? `<b>${imprimir}</b>` : "—"}</td>
+      <td class="n faltam">${falta ? `<b>${falta}</b>` : okMarca}</td>
+      <td class="n agora">${imprimir ? `<b>${imprimir}</b>` : "—"}</td>
     </tr>`;
   }
 
@@ -282,26 +317,32 @@
       const totalImprimir = somaValores(et.imprimir);
       return `<section class="local st-${st}" data-loc="${loc.id}">
         <header class="local-head">
-          <div class="ordem-btns">
-            <button class="icon" data-acao="subir" ${idx === 0 ? "disabled" : ""} aria-label="Subir">▲</button>
-            <button class="icon" data-acao="descer" ${idx === etapas.length - 1 ? "disabled" : ""} aria-label="Descer">▼</button>
-          </div>
+          <span class="ordem-num" aria-hidden="true">${idx + 1}</span>
           <div class="titulo">
-            <h2>${idx + 1}. ${esc(loc.nome)}</h2>
-            <p class="muted">Livro p. ${loc.pag}${loc.missao ? ` · missão ${loc.missao}` : ""} · ${totalPrecisa} minis no local${st !== "concluido" && totalImprimir ? ` · <b class="destaque">imprimir ${totalImprimir}</b>` : ""}</p>
+            <h2><span class="sr-only">${idx + 1}. </span>${esc(loc.nome)}</h2>
+            <p class="local-meta"><span>Livro, p. ${loc.pag}</span>${loc.missao ? `<span>Missão ${esc(loc.missao)}</span>` : ""}<span>${plural(totalPrecisa, "mini", "minis")} no local</span></p>
           </div>
-          <label class="nivel-local" title="Nível do grupo ao chegar aqui (padrão: nível para o qual o livro balanceou o local)">Nível
-            <input type="number" min="1" max="10" data-nivel="${loc.id}" value="${nivelDe(loc)}"></label>
-          <select class="status" data-acao="status" aria-label="Status do local">
-            ${["pendente", "atual", "concluido"].map((s) => `<option value="${s}" ${s === st ? "selected" : ""}>${statusLabel[s]}</option>`).join("")}
-          </select>
+          <div class="local-acoes">
+            ${st === "concluido" ? "" : totalImprimir
+              ? `<span class="imprimir">Imprimir ${totalImprimir}</span>`
+              : totalPrecisa ? `<span class="pronto">Nada novo a imprimir</span>` : ""}
+            <label class="nivel-local" title="Nível do grupo ao chegar aqui (padrão: nível para o qual o livro balanceou o local)">Nível
+              <input type="number" min="1" max="10" data-nivel="${loc.id}" value="${nivelDe(loc)}"></label>
+            <select class="status" data-acao="status" aria-label="Status de ${esc(loc.nome)}">
+              ${["pendente", "atual", "concluido"].map((s) => `<option value="${s}" ${s === st ? "selected" : ""}>${statusLabel[s]}</option>`).join("")}
+            </select>
+            <div class="ordem-btns">
+              <button class="icon" data-acao="subir" ${idx === 0 ? "disabled" : ""} aria-label="Mover ${esc(loc.nome)} para cima">▲</button>
+              <button class="icon" data-acao="descer" ${idx === etapas.length - 1 ? "disabled" : ""} aria-label="Mover ${esc(loc.nome)} para baixo">▼</button>
+            </div>
+          </div>
         </header>
         ${ids.length ? `<div class="tabela-wrap"><table>
           <thead><tr><th>Miniatura</th><th>Tamanho</th><th class="n">Precisa</th><th class="n">Impressas</th><th class="n">Faltam</th><th class="n" title="Considerando os locais anteriores no plano">Imprimir agora</th></tr></thead>
           <tbody>${ids.map((m) => linhaNecessidade(m, need[m], st === "concluido" ? 0 : et.imprimir[m])).join("")}</tbody>
         </table></div>` : `<p class="muted pad">Nenhuma miniatura com os filtros atuais.</p>`}
         <details ${aberto ? "open" : ""} data-acao="toggle">
-          <summary>Encontros (${encs.filter(encLigado).length}/${encs.length} ativos)</summary>
+          <summary>Encontros (${encs.filter(encLigado).length} de ${encs.length} ativos)</summary>
           <ul class="encontros">
             ${encs.map((e) => {
               const comp = composicao(e, loc);
@@ -311,7 +352,7 @@
               if (ex.length) desc += ` <span class="reforco">+ ${ex.map((m) => `${comp.extra[m]}× ${esc(mini(m).nome)}`).join(", ")} (5.5e)</span>`;
               if (comp.combate) desc += ` <span class="dif dif-${comp.dif}">${DIF[comp.dif]}</span>` +
                 (S.regras !== "5e" && comp.difLivro !== comp.dif ? ` <span class="muted">(livro: ${DIF[comp.difLivro]})</span>` : "") +
-                ` <span class="muted">· ${comp.xp.toLocaleString("pt-BR")} XP</span>` +
+                ` <span class="xp">${comp.xp.toLocaleString("pt-BR")} XP</span>` +
                 (S.regras !== "5e" && e.dica ? `<div class="enc-nota aviso-txt">${esc(e.dica)}</div>` : "");
               return `<li class="${encLigado(e) ? "" : "off"}">
                 <label><input type="checkbox" data-enc="${e.id}" ${encLigado(e) ? "checked" : ""}>
@@ -387,7 +428,7 @@
       `<a href="${urlStl(ref)}" target="_blank" rel="noopener">${esc(nome)}</a>`);
     const termo = info.en || mini(m).nome;
     fontes.push(`<a class="busca" href="https://www.thingiverse.com/search?q=${encodeURIComponent(termo + " miniature")}&type=things" target="_blank" rel="noopener">buscar</a>`);
-    return fontes.join(" · ");
+    return `<span class="links">${fontes.join("")}</span>`;
   }
 
   const NPCS_UNICOS = ["falcon", "donjon", "adabra", "alfonso", "pell", "toblen", "dobin", "tibor", "corwin", "harbin", "elmar", "linene", "halia"];
@@ -406,7 +447,7 @@
       stlContagem[m] = r[caminhos[i]] || 0;
       if (stlContagem[m]) S.stlOk[m] = true;
     });
-    pastaStatus = `Pasta <b>${esc(Visualizador.nome())}</b> conectada · ${Object.values(stlContagem).filter(Boolean).length} minis com STL`;
+    pastaStatus = `Pasta <b>${esc(Visualizador.nome())}</b> conectada. ${plural(Object.values(stlContagem).filter(Boolean).length, "mini tem", "minis têm")} STL.`;
     render();
   }
 
@@ -446,7 +487,7 @@
             return `<tr class="${falta ? "falta" : "ok-row"}"><td class="nome-mini"><div class="nome-linha">${esc(mini(m).nome)} <button class="ver3d" data-ver="${m}" title="Ver o STL em 3D">3D${stlContagem[m] ? ` <span class="qtd">${stlContagem[m]}</span>` : ""}</button></div><div class="pasta"><code>stl/${pastaStl(m)}</code></div>${mini(m).obs ? `<div class="enc-nota">${esc(mini(m).obs)}</div>` : ""}</td><td class="col-tam">${tamBadge(mini(m).tam)}</td>
               <td class="onde col-onde">${esc(onde) || "—"}</td><td class="n col-pico-total">${maxTot[m] || 0}</td><td class="n col-pico-pend">${maxPend[m] || 0}</td>
               <td class="n"><input type="number" min="0" class="inv" data-mini="${m}" value="${tem}"></td>
-              <td class="n">${falta ? `<b>${falta}</b>` : "✓"}</td>
+              <td class="n faltam">${falta ? `<b>${falta}</b>` : okMarca}</td>
               <td class="stl">${linksStl(m)}</td>
               <td class="n"><input type="checkbox" class="stl-ok" data-mini="${m}" ${S.stlOk[m] ? "checked" : ""} aria-label="STL de ${esc(mini(m).nome)} baixado"></td></tr>`;
           }).join("")}</tbody></table></div>`).join("")}`;
@@ -556,7 +597,12 @@
       const t = e.target.closest("button");
       if (!t) return;
       const sec = t.closest(".local");
-      if (t.dataset.acao === "subir" || t.dataset.acao === "descer") {
+      if (t.dataset.passo) {
+        const inp = $("#" + t.dataset.alvo);
+        const v = (+inp.value || 0) + +t.dataset.passo;
+        inp.value = Math.min(+inp.max || 99, Math.max(+inp.min || 0, v));
+        inp.dispatchEvent(new Event("input", { bubbles: true }));
+      } else if (t.dataset.acao === "subir" || t.dataset.acao === "descer") {
         const id = sec.dataset.loc, i = S.ordem.indexOf(id), j = t.dataset.acao === "subir" ? i - 1 : i + 1;
         if (j >= 0 && j < S.ordem.length) { [S.ordem[i], S.ordem[j]] = [S.ordem[j], S.ordem[i]]; render(); }
       } else if (t.dataset.delEnc) {
@@ -625,5 +671,7 @@
 
   bind();
   render();
+  // A entrada das bases na mesa só anima na primeira carga, não a cada ajuste
+  setTimeout(() => $("#resumo").classList.remove("estreia"), 2000);
   iniciarPasta(false);
 })();
