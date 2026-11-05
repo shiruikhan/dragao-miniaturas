@@ -437,18 +437,17 @@
       <p class="intro"><b>STL</b>: indicações gratuitas (Thingiverse/Printables), com preferência pelos modelos do sergeantr feitos a partir das minis do Essentials Kit e pelos do MZ4250. Confira a licença na página antes de baixar. Salve na pasta <code>stl/&lt;nome-da-mini&gt;</code> do projeto (fica fora do git).</p>
       ${Object.keys(TIPOS).filter((t) => porTipo[t]).map((t) => `
         <h3>${TIPOS[t]}</h3>
-        <div class="tabela-wrap"><table>
-          <thead><tr><th>Miniatura</th><th>Tamanho</th><th>Onde aparece</th><th class="n">Pico (campanha)</th><th class="n">Pico (pendentes)</th><th class="n">Impressas</th><th class="n">Faltam</th><th>STL (gratuito)</th><th class="n">Ver</th><th class="n" title="Marque quando o STL já estiver baixado na sua pasta">Baixado</th></tr></thead>
+        <div class="tabela-wrap"><table class="inventario">
+          <thead><tr><th>Miniatura</th><th class="col-tam">Tamanho</th><th class="col-onde">Onde aparece</th><th class="n col-pico-total" title="Maior quantidade num único local, campanha inteira">Pico total</th><th class="n col-pico-pend" title="Maior quantidade num único local, só locais pendentes">Pico pend.</th><th class="n">Impressas</th><th class="n">Faltam</th><th>STL (gratuito)</th><th class="n" title="Marque quando o STL já estiver baixado na sua pasta">Baixado</th></tr></thead>
           <tbody>${porTipo[t].map((m) => {
             const tem = S.impressas[m] || 0;
             const falta = Math.max(0, (maxPend[m] || 0) - tem);
             const onde = LOCAIS.filter((l) => necessidadeLocal(l)[m]).map((l) => `${l.nome} (${necessidadeLocal(l)[m]})`).join(", ");
-            return `<tr class="${falta ? "falta" : "ok-row"}"><td>${esc(mini(m).nome)}<div class="pasta"><code>stl/${pastaStl(m)}</code></div>${mini(m).obs ? `<div class="enc-nota">${esc(mini(m).obs)}</div>` : ""}</td><td>${tamBadge(mini(m).tam)}</td>
-              <td class="onde">${esc(onde) || "—"}</td><td class="n">${maxTot[m] || 0}</td><td class="n">${maxPend[m] || 0}</td>
+            return `<tr class="${falta ? "falta" : "ok-row"}"><td class="nome-mini"><div class="nome-linha">${esc(mini(m).nome)} <button class="ver3d" data-ver="${m}" title="Ver o STL em 3D">3D${stlContagem[m] ? ` <span class="qtd">${stlContagem[m]}</span>` : ""}</button></div><div class="pasta"><code>stl/${pastaStl(m)}</code></div>${mini(m).obs ? `<div class="enc-nota">${esc(mini(m).obs)}</div>` : ""}</td><td class="col-tam">${tamBadge(mini(m).tam)}</td>
+              <td class="onde col-onde">${esc(onde) || "—"}</td><td class="n col-pico-total">${maxTot[m] || 0}</td><td class="n col-pico-pend">${maxPend[m] || 0}</td>
               <td class="n"><input type="number" min="0" class="inv" data-mini="${m}" value="${tem}"></td>
               <td class="n">${falta ? `<b>${falta}</b>` : "✓"}</td>
               <td class="stl">${linksStl(m)}</td>
-              <td class="n"><button class="ver3d" data-ver="${m}" title="Ver o STL em 3D">3D${stlContagem[m] ? ` <span class="qtd">${stlContagem[m]}</span>` : ""}</button></td>
               <td class="n"><input type="checkbox" class="stl-ok" data-mini="${m}" ${S.stlOk[m] ? "checked" : ""} aria-label="STL de ${esc(mini(m).nome)} baixado"></td></tr>`;
           }).join("")}</tbody></table></div>`).join("")}`;
   }
